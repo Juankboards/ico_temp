@@ -91,7 +91,7 @@ def perform_exchange(ctx):
         return False
 
     min_tokens(ctx,attachments[0],attachments[1],tokens)
-
+    add_contribution(ctx, attachments[1], attachments[2], attachments[3])
     #get the toal tokens sold on public sale
     current_tokens_sold = Get(PUBLIC_SALE_SOLD_KEY)
 
@@ -209,3 +209,18 @@ def min_tokens(ctx,from_address,to_address,tokens):
 
     # dispatch transfer event
     OnTransfer(from_address,to_address,tokens)
+
+def add_contribution(ctx,to_address,neo_contribution,gas_contribution):
+    neo_contributed_key = concat(NEO_CONTRIBUTION_KEY,to_address)
+    gas_contributed_key = concat(GAS_CONTRIBUTION_KEY,to_address)
+
+    current_neo_contributed = Get(ctx,neo_contributed_key)
+    current_gas_contributed = Get(ctx,gas_contributed_key)
+
+    current_neo_contributed += neo_contribution
+    current_gas_contributed += gas_contribution
+
+    Put(ctx,neo_contributed_key,current_neo_contributed)
+    Put(ctx,gas_contributed_key,current_gas_contributed)
+
+    return True

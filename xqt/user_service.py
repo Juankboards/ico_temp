@@ -21,30 +21,35 @@ def handle_user(ctx, operation, args):
                 return 'Incorrect address format'
             return get_user_info(ctx,args[0])
         return args_incorrect_len
+
     elif operation == 'user_properties':
         if len(args) == 1:
             if len(args[0]) != 20:
                 return 'Incorrect address format'
             return get_properties_user(ctx,args[0])
         return args_incorrect_len
+
     elif operation == 'register_user':
         if len(args) == 2:
             if len(args[0]) != 20:
                 return 'Incorrect address format'
             return user_info_registration(ctx, args[0],args[1])
         return args_incorrect_len
+
     elif operation == 'update_user':
         if len(args) == 2:
             if len(args[0]) != 20:
                 return 'Incorrect address format'
             return user_info_update(ctx, args[0],args[1])
         return args_incorrect_len
+
     elif operation == 'delete_user':
         if len(args) == 1:
             if len(args[0]) != 20:
                 return 'Incorrect address format'
             return user_deletion(ctx, args[0])
         return args_incorrect_len
+        
     return False
 
 def get_user_info(ctx, address):

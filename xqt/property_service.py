@@ -20,26 +20,31 @@ def handle_prop(ctx, operation, args):
         if len(args) == 1:
             return get_prop_info(ctx,args[0])
         return args_incorrect_len
+
     elif operation == 'prop_owner':
         if len(args) == 1:
             return get_prop_owner(ctx,args[0])
         return args_incorrect_len
+
     elif operation == 'register_prop':
         if len(args) == 3:
             if len(args[2]) != 20:
                 return 'Incorrect address format'
             return prop_info_registration(ctx, args[0],args[1],args[2])
         return args_incorrect_len
+
     elif operation == 'update_prop':
         if len(args) == 3:
             if len(args[2]) != 20:
                 return 'Incorrect address format'
             return prop_info_update(ctx, args[0],args[1],args[2])
         return args_incorrect_len
+
     elif operation == 'delete_prop':
         if len(args) == 1:
             return prop_deletion(ctx, args[0])
         return args_incorrect_len
+
     return False
 
 def get_prop_info(ctx, id):
@@ -73,7 +78,6 @@ def prop_info_registration(ctx, id,hash,address):
             print('The property is already registered to caller address')
             return False
 
-    print('user_props_serialized')
     store_prop(ctx,id,hash,address)
 
     OnPropRegist(id)
@@ -172,8 +176,6 @@ def add_prop_to_user(ctx,address,hash):
     user_prop_array = add_item(user_prop_array,hash)
     user_props_serialized = serialize_array(user_prop_array)
 
-    print('user_props_serialized')
-    print(user_props_serialized)
     key = operation_key(USER_PROP_KEY,address)
 
     Put(ctx,key,user_props_serialized)

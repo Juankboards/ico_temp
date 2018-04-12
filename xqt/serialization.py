@@ -32,7 +32,6 @@ def deserialize_bytearray(data):
         item = substr(data, offset + start, item_len)
 
         # store it in collection
-        print(item)
         new_collection[i] = item
 
         # trim the data

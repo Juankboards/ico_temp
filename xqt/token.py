@@ -18,6 +18,10 @@ TOKEN_CIRC_KEY = b'in_circulation'
 
 PUBLIC_SALE_SOLD_KEY = b'pub_sale_sold'
 
+NEO_CONTRIBUTION_KEY = b'neo_contributed'
+
+GAS_CONTRIBUTION_KEY = b'gas_contributed'
+
 TOKEN_TOTAL_SUPPLY = 100000000 * 100000000  # 100m total supply * 10^8 ( decimals)
 
 TOKEN_INITIAL_AMOUNT = 30825000 * 100000000  # 26.5m to owners plus 4.325m private sale * 10^8
