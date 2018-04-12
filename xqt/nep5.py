@@ -8,6 +8,8 @@ from xqt.token import *
 OnTransfer = RegisterAction('transfer', 'addr_from', 'addr_to', 'amount')
 OnApprove = RegisterAction('approve', 'addr_from', 'addr_to', 'amount')
 
+args_incorrect_len = 'incorrect args length'
+
 
 def handle_nep51(ctx, operation, args):
 
@@ -25,23 +27,30 @@ def handle_nep51(ctx, operation, args):
 
     elif operation == 'balanceOf':
         if len(args) == 1:
+            if len(args[0]) != 20:
+                return 'Incorrect address format'
             return Get(ctx, args[0])
+        return args_incorrect_len
 
     elif operation == 'transfer':
         if len(args) == 3:
             return do_transfer(ctx, args[0], args[1], args[2])
+        return args_incorrect_len
 
     elif operation == 'transferFrom':
         if len(args) == 3:
             return do_transfer_from(ctx, args[0], args[1], args[2])
+        return args_incorrect_len
 
     elif operation == 'approve':
         if len(args) == 3:
             return do_approve(ctx, args[0], args[1], args[2])
+        return args_incorrect_len
 
     elif operation == 'allowance':
         if len(args) == 2:
             return do_allowance(ctx, args[0], args[1])
+        return args_incorrect_len
 
     return False
 
@@ -163,4 +172,11 @@ def do_approve(ctx, t_owner, t_spender, amount):
 
 def do_allowance(ctx, t_owner, t_spender):
 
-    return Get(ctx, concat(t_owner, t_spender))
+    allowance_key = concat(t_owner, t_spender)
+
+    if len(allowance_key) != 40:
+        return 0
+
+    amount = Get(allowance_key)
+
+    return amount

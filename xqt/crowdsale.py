@@ -10,7 +10,15 @@ from xqt.txio import get_asset_attachments
 # OnInvalidKYCAddress = RegisterAction('invalid_registration', 'address')
 OnKYCRegister = RegisterAction('kyc_registration', 'address')
 OnTransfer = RegisterAction('transfer', 'addr_from', 'addr_to', 'amount')
+OnContribution = RegisterAction('contribution', 'from', 'neo', 'gas', 'tokens')
 OnRefund = RegisterAction('refund', 'addr_to', 'amount')
+
+
+OnPreSaleMint = RegisterAction('presale_mint', 'to', 'neo', 'tokens')
+
+
+
+KYC_KEY = b'kyc_ok'
 
 
 def kyc_register(ctx, args):
@@ -68,9 +76,9 @@ def perform_exchange(ctx):
     attachments = get_asset_attachments()  # [receiver, sender, neo, gas]
 
     # this looks up whether the exchange can proceed
-    exchange_ok = can_exchange(ctx, attachments, False)
+    tokens = check_and_calculate_exchange(ctx, attachments, False)
 
-    if not exchange_ok:
+    if not tokens:
         # This should only happen in the case that there are a lot of TX on the final
         # block before the total amount is reached.  An amount of TX will get through
         # the verification phase because the total amount cannot be updated during that phase
@@ -82,31 +90,21 @@ def perform_exchange(ctx):
             OnRefund(attachments[1], attachments[3])
         return False
 
-    # lookup the current balance of the address
-    current_balance = Get(ctx, attachments[1])
+    min_tokens(ctx,attachments[0],attachments[1],tokens)
 
-    TOKENS = get_token_rate(ctx)
+    #get the toal tokens sold on public sale
+    current_tokens_sold = Get(PUBLIC_SALE_SOLD_KEY)
 
-    # calculate the amount of tokens the attached neo will earn
-    exchanged_tokens = attachments[2] * TOKENS[0] / 100000000
+    current_tokens_sold += tokens
 
-    # if you want to exchange gas instead of neo, use this
-    exchanged_tokens += attachments[3] * TOKENS[1] / 100000000
+    Put(ctx,PUBLIC_SALE_SOLD_KEY,current_tokens_sold)
 
-    # add it to the the exchanged tokens and persist in storage
-    new_total = exchanged_tokens + current_balance
-    Put(ctx, attachments[1], new_total)
-
-    # update the in circulation amount
-    result = add_to_circulation(ctx, exchanged_tokens)
-
-    # dispatch transfer event
-    OnTransfer(attachments[0], attachments[1], exchanged_tokens)
+    # track contributions as a separate event for token sale account page transaction updates
+    OnContribution(attachments[1],attachments[2],attachments[3], tokens)
 
     return True
 
-
-def can_exchange(ctx, attachments, verify_only):
+def check_and_calculate_exchange(ctx, attachments, verify_only):
     """
     Determines if the contract invocation meets all requirements for the ICO exchange
     of neo or gas into NEP5 Tokens.
@@ -131,17 +129,10 @@ def can_exchange(ctx, attachments, verify_only):
 
     status = get_kyc_status(ctx,attachments[1])
     if not status:
+        print("not KYC approved")
         return False
 
-    TOKENS = get_token_rate(ctx)
-
-    # calculate the amount requested per neo
-    amount_requested = attachments[2] * TOKENS[0] / 100000000
-
-    # calculate the amount requested per gas
-    amount_requested += attachments[3] * TOKENS[1] / 100000000
-
-    exchange_ok = calculate_can_exchange(ctx, amount_requested, attachments[1], verify_only)
+    exchange_ok = calculate_tokens(ctx,attachments[2],attachments[3])
 
     return exchange_ok
 
@@ -155,12 +146,14 @@ def get_kyc_status(ctx, address):
     :return:
         bool: KYC Status of address
     """
-    kyc_storage_key = concat(KYC_KEY, address)
+    if len(address) == 20:
+        kyc_storage_key = concat(KYC_KEY, address)
+        return Get(ctx, kyc_storage_key)
 
-    return Get(ctx, kyc_storage_key)
+    return False
 
 
-def calculate_can_exchange(ctx, amount, address, verify_only):
+def calculate_tokens(ctx,neo_attached,gas_attached):
     """
     Perform custom token exchange calculations here.
 
@@ -169,20 +162,50 @@ def calculate_can_exchange(ctx, amount, address, verify_only):
     :return:
         bool: Whether or not an address can exchange a specified amount
     """
-    currentTime = get_current_time()
+    current_time = get_current_time()
+    current_tokens_sold = Get(ctx, PUBLIC_SALE_SOLD_KEY)
 
-    current_in_circulation = Get(ctx, TOKEN_CIRC_KEY)
+    tokens = get_token_rate(current_tokens_sold,current_time)
 
-    new_amount = current_in_circulation + amount
+    # calculate the amount requested per neo
+    amount_requested = neo_attached * tokens[0] / 100000000
 
-    if new_amount > TOKEN_TOTAL_SUPPLY:
+    # calculate the amount requested per gas
+    amount_requested += gas_attached * tokens[1] / 100000000
+
+    new_amount = current_tokens_sold + amount_requested
+
+    if new_amount > PUBLIC_SALE_TOKEN_LIMIT:
+        print("purchase would exceed token sale limit")
         return False
 
     if currentTime < DATE_SALE_START:
+        print("sale not started")
         return False
 
-    # if we are in free round, any amount
-    if height > DATE_SALE_STop:
+    if height > DATE_SALE_STOP:
+        print("crowdsale ended")
         return False
 
-    return True
+    return amount_requested
+
+def min_tokens(ctx,from_address,to_address,tokens):
+    """
+    Mint tokens for an address
+        :param from_address: the address from which the tokens are being minted (should always be the contract address)
+        :param to_address: the address to transfer the minted tokens to
+        :param tokens: the number of tokens to mint
+    """
+    # lookup the current balance of the address
+    current_balance = Get(ctx,to_address)
+
+    new_total = current_balance + tokens
+
+    #save new balance on the address
+    Put(ctx,to_address,new_total)
+
+    # update the in circulation amount
+    result = add_to_circulation(ctx, tokens)
+
+    # dispatch transfer event
+    OnTransfer(from_address,to_address,tokens)

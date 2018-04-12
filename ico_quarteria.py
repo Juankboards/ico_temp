@@ -10,11 +10,9 @@ from boa.interop.Neo.Storage import *
 
 ctx = GetContext()
 
-print('init')
 NEP5_METHODS = ['name', 'symbol', 'decimals', 'totalSupply', 'balanceOf', 'transfer', 'transferFrom', 'approve', 'allowance']
-USER_METHODS = ['user_info''user_properties''register_user''update_user''delete_user']
-PROPERTIES_METHODS = ['prop_info''prop_owner''register_prop''update_prop''delete_prop']
-
+USER_METHODS = ['user_info', 'user_properties', 'register_user', 'update_user', 'delete_user']
+PROPERTIES_METHODS = ['prop_info', 'prop_owner', 'register_prop', 'update_prop', 'delete_prop']
 
 def Main(operation, args):
     """
@@ -33,7 +31,8 @@ def Main(operation, args):
     if trigger == Verification():
 
         # check if the invoker is the owner of this contract
-        is_owner = CheckWitness(TOKEN_OWNER)
+        owner =Get(TOKEN_OWNER)
+        is_owner = CheckWitness(owner)
 
         # If owner, proceed
         if is_owner:
@@ -43,7 +42,7 @@ def Main(operation, args):
         # Otherwise, we need to lookup the assets and determine
         # If attachments of assets is ok
         attachments = get_asset_attachments()
-        return can_exchange(ctx, attachments, True)
+        return check_and_calculate_exchange(ctx, attachments, True)
 
     elif trigger == Application():
 
@@ -53,11 +52,11 @@ def Main(operation, args):
 
         for op in USER_METHODS:
             if operation == op:
-                return handle_nep51(ctx, operation, args)
+                return handle_user(ctx, operation, args)
 
         for op in PROPERTIES_METHODS:
             if operation == op:
-                return handle_nep51(ctx, operation, args)
+                return handle_prop(ctx, operation, args)
 
         if operation == 'deploy':
             return deploy()
