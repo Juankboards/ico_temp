@@ -93,8 +93,7 @@ def perform_exchange(ctx):
     min_tokens(ctx,attachments[0],attachments[1],tokens)
     add_contribution(ctx, attachments[1], attachments[2], attachments[3])
     #get the toal tokens sold on public sale
-    current_tokens_sold = Get(PUBLIC_SALE_SOLD_KEY)
-
+    current_tokens_sold = Get(ctx,PUBLIC_SALE_SOLD_KEY)
     current_tokens_sold += tokens
 
     Put(ctx,PUBLIC_SALE_SOLD_KEY,current_tokens_sold)
@@ -118,8 +117,7 @@ def check_and_calculate_exchange(ctx, attachments, verify_only):
         bool: Whether an invocation meets requirements for exchange
     """
 
-    # if you are accepting gas, use this
-    if attachments[2] == 0 or attachments[3] == 0:
+    if attachments[2] == 0 and attachments[3] == 0:
        print("no neo or gas attached")
        return False
 
@@ -163,7 +161,7 @@ def calculate_tokens(ctx,neo_attached,gas_attached):
         bool: Whether or not an address can exchange a specified amount
     """
     current_time = get_current_time()
-    current_tokens_sold = Get(ctx, PUBLIC_SALE_SOLD_KEY)
+    current_tokens_sold = Get(ctx,PUBLIC_SALE_SOLD_KEY)
 
     tokens = get_token_rate(current_tokens_sold,current_time)
 
@@ -179,11 +177,11 @@ def calculate_tokens(ctx,neo_attached,gas_attached):
         print("purchase would exceed token sale limit")
         return False
 
-    if currentTime < DATE_SALE_START:
+    if current_time < DATE_SALE_START:
         print("sale not started")
         return False
 
-    if height > DATE_SALE_STOP:
+    if current_time > DATE_SALE_STOP:
         print("crowdsale ended")
         return False
 
@@ -223,4 +221,14 @@ def add_contribution(ctx,to_address,neo_contribution,gas_contribution):
     Put(ctx,neo_contributed_key,current_neo_contributed)
     Put(ctx,gas_contributed_key,current_gas_contributed)
 
-    return True
+def get_contribution(ctx,type,args):
+    key = NEO_CONTRIBUTION_KEY
+    if type == 'gas':
+        key = GAS_CONTRIBUTION_KEY
+
+    if len(args) == 1:
+        if len(args[0]) == 20:
+            contribution_key = concat(key,args[0])
+            return Get(ctx,contribution_key)
+        return 'Incorrect address format'
+    return 'incorrect args length'

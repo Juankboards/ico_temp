@@ -51,43 +51,35 @@ def get_current_time():
     return current_time
 
 def get_token_rate(current_tokens_sold,current_time):
-    date_bonus = get_bonus_by_time()
-    cap_bonus = get_bonus_by_cap()
+    date_bonus = get_bonus_by_time(current_time)
+    cap_bonus = get_bonus_by_cap(current_tokens_sold)
 
     if date_bonus[0] < cap_bonus[0]:
         return date_bonus
     return cap_bonus
 
 def get_bonus_by_time(current_time):
-    bonus = [NEO_NO_BONUS,GAS_NO_BONUS]
 
     if current_time > 1528030800: #03-jun
-        return bonus
+        return [NEO_NO_BONUS,GAS_NO_BONUS]
     elif current_time > 1526821200: #20-may
-        bonus = [NEO_BONUS_5,GAS_NO_BONUS_5]
-        return bonus
+        return [NEO_BONUS_5,GAS_BONUS_5]
     elif current_time > 1525611600: #06-may
-        bonus = [NEO_BONUS_10,GAS_NO_BONUS_10]
-        return bonus
+        return [NEO_BONUS_10,GAS_BONUS_10]
     elif current_time > 1524402000: #22-april
-        bonus = [NEO_BONUS_20,GAS_NO_BONUS_20]
-        return bonus
+        return [NEO_BONUS_20,GAS_BONUS_20]
 
-    return bonus
+    return [NEO_NO_BONUS,GAS_NO_BONUS]
 
 def get_bonus_by_cap(current_tokens_sold):
-    bonus = [NEO_NO_BONUS,GAS_NO_BONUS]
 
     if current_tokens_sold > (32375000*100000000): #tier 3
-        return bonus
+        return [NEO_NO_BONUS,GAS_NO_BONUS]
     elif current_tokens_sold > (11500000*100000000): #tier 2
-        bonus = [NEO_BONUS_5,GAS_NO_BONUS_5]
-        return bonus
+        return [NEO_BONUS_5,GAS_BONUS_5]
     elif current_tokens_sold > (1500000*100000000): #tier1
-        bonus = [NEO_BONUS_10,GAS_NO_BONUS_10]
-        return bonus
-    elif current_tokens_sold >= (0): #pre-sale
-        bonus = [NEO_BONUS_20,GAS_NO_BONUS_20]
-        return bonus
+        return [NEO_BONUS_10,GAS_BONUS_10]
+    elif current_tokens_sold >= 0: #pre-sale
+        return [NEO_BONUS_20,GAS_BONUS_20]
 
-    return bonus
+    return [NEO_NO_BONUS,GAS_NO_BONUS]

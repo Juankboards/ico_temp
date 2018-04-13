@@ -177,6 +177,6 @@ def do_allowance(ctx, t_owner, t_spender):
     if len(allowance_key) != 40:
         return 0
 
-    amount = Get(allowance_key)
+    amount = Get(ctx,allowance_key)
 
     return amount

@@ -31,7 +31,7 @@ def Main(operation, args):
     if trigger == Verification():
 
         # check if the invoker is the owner of this contract
-        owner =Get(TOKEN_OWNER)
+        owner =Get(ctx,TOKEN_OWNER)
         is_owner = CheckWitness(owner)
 
         # If owner, proceed
@@ -77,6 +77,12 @@ def Main(operation, args):
 
         elif operation == 'crowdsale_available':
             return crowdsale_available_amount(ctx)
+
+        elif operation == 'neo_contribution':
+            return get_contribution(ctx,'neo',args)
+
+        elif operation == 'gas_contribution':
+            return get_contribution(ctx,'gas',args)
 
         elif operation == 'get_attachments':
             return get_asset_attachments()
