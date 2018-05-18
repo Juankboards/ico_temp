@@ -59,7 +59,6 @@ def get_token_rate(current_tokens_sold,current_time):
     return cap_bonus
 
 def get_bonus_by_time(current_time):
-
     if current_time > 1528030800: #03-jun
         return [NEO_NO_BONUS,GAS_NO_BONUS]
     elif current_time > 1526821200: #20-may

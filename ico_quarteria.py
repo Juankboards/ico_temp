@@ -7,6 +7,8 @@ from xqt.property_service import *
 from boa.interop.Neo.Runtime import GetTrigger, CheckWitness
 from boa.interop.Neo.TriggerType import Application, Verification
 from boa.interop.Neo.Storage import *
+from boa.builtins import substr
+
 
 ctx = GetContext()
 
@@ -31,7 +33,7 @@ def Main(operation, args):
     if trigger == Verification():
 
         # check if the invoker is the owner of this contract
-        owner =Get(ctx,TOKEN_OWNER)
+        owner = TOKEN_OWNER
         is_owner = CheckWitness(owner)
 
         # If owner, proceed
@@ -99,7 +101,10 @@ def deploy():
     :return:
         bool: Whether the operation was successful
     """
-    if not CheckWitness(TOKEN_OWNER):
+    owner = TOKEN_OWNER
+    is_owner = CheckWitness(owner)
+
+    if not is_owner:
         print("Must be owner to deploy")
         return False
 
